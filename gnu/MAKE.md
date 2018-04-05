@@ -38,7 +38,9 @@ Makefile内容包含显式规则，隐式规则，变量定义，指令和注释
   * 变量引用或函数调用时，`#`将不作为注释开头。
   * 执行动作中的`#`,将被传递给`SHELL`处理
   * `define`指令中，`#`内容取决于变量执行
-* 双冒号规则，`target`分隔符，即`::`代替`:`，任何时候都将被调用
+* 双冒号规则，`target`分隔符，即`::`代替`:`
+  * `target`晚于任意`prerequisites`时执行。
+  * 无`prerequisites`,任何时候都将执行。
 ###Makefile规则
 ```
 target … : prerequisites …
@@ -68,8 +70,14 @@ target … : prerequisites …
   一般依赖目标 | order-only依赖目标
   ```
 * recipe：执行的动作,可以有多个命令。（注意：需要在每一个动作行上，加上一个tab作为前缀,也可以设置`.RECIPEPREFIX`变量，来改变前缀符）。
+  * 一个变量，定义一个上下文环境
+  * 一个条件表达式，定义一个上下文环境
+  * 以`@`开始的行，在传递给`shell`之前会抛弃掉，用于打印提示。
+  * 执行时，将为每行调用一个新`shell`
+  * `.ONESHELL`用于将所有`target`的所有行，放在一个上下文运行
 ###执行make
-Makefile中，第一个以非`.`开头的`target`开始（即默认`target`）。如有依赖目标，即检查是否需要生成依赖目标，且当需要生成时，执行依赖目标动作。（即依赖倒推方式执行）
+Makefile中，第一个以非`.`开头的`target`开始（即默认`target`）。如有依赖目标，即检查是否需要生成依赖目标，且当需要生成时，执行依赖目标动作。（即依赖倒推方式执行）。
+makefile有读入和展开两个阶段。读入阶段会替换变量或转义字符,展开阶段会继续替换转义后的变量。
 ###gnu程序targets规范
 * `all` 编译程序，应该是默认`target`,不需要重建文档。默认makefile规则中，编译和链接需要带`-g`可调试参数。
 * `install` 编译程序，并拷贝可执行文件，库文件等至安装路径。并且如有验证可用性测试，应该在此执行。
@@ -112,6 +120,11 @@ targets …: target-pattern: prereq-patterns …
         recipe
         …
 ```
+从`target`中根据`target-pattern`提取匹配部分，再将该部分按照`prereq-patterns`生成`preerquisites`
+###gcc依赖生成命令行选项
+* `-E`预处理执行完即停止编译 
+* `-M`预处理将`.c`源码中的`#include`按照make规则输出 
+* `-MM`与`-M`一样，只是不包含标准库
 ###读取其他makefile
 * MAKE
 * include
