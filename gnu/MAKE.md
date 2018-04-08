@@ -8,8 +8,23 @@ Makefile内容包含显式规则，隐式规则，变量定义，指令和注释
 * `显示规则`描述如何重制一个或多个文件，和调用规则的目标。它罗列出目标所有的依赖条件和执行指令
 * `隐式规则`描述何时以及如何根据其名称重新创建一类文件。
 * `变量定义`描述变量的文本字符串值的行，可以在稍后将其替换为文本。
-  * 展开变量方式：`$(变量)`或`${变量}`
+  * 展开变量方式：`$变量`，`$(变量)`或`${变量}`
+  * `=`为递归时扩展，即展开时去计算值
+  * `:=`或`::=`为简单扩展，即定义时定义值
+  * `?=`为未定义变量赋值
+  * `+=`追加变量值
+  * `$(var:match=replace)`为变量值替换
+  * 如果变量在命令行被定义，那么makefile内普通变量无效，需要`override 变量名 = 变量值`进行覆盖。
+  * target特定变量`prog : CFLAGS = -g`，只在当前target的所有`prerequisites`有效
+  * `undefine 变量名`为删除变量
+  * make可以直接使用系统环境变量
   * 环境变量`MAKEFILES`如果被定义,它的值作为附加makefile文件列表，在其他文件之前被读取。
+  * [自动定义变量](https://www.gnu.org/software/make/manual/make.html#Automatic-Variables)
+    * `#@`当前`target`的文件名
+    * `#$`归档成员名
+    * `#<`rule第一个`prerequisite`的名称
+    * `$?`rule所有`prerequisite`的名称
+  * [隐式规则变量](https://www.gnu.org/software/make/manual/make.html#Implicit-Variables)
 * `指令`描述make在读取makefile时做的特殊事情。
   * 读取其他makefile：`include filenames…`
     * 文件名为空，不会包含内容，也不会报异常
@@ -41,6 +56,7 @@ Makefile内容包含显式规则，隐式规则，变量定义，指令和注释
 * 双冒号规则，`target`分隔符，即`::`代替`:`
   * `target`晚于任意`prerequisites`时执行。
   * 无`prerequisites`,任何时候都将执行。
+  * 同`target`规则，被视为不同的两个规则，分别执行。
 ###Makefile规则
 ```
 target … : prerequisites …
@@ -62,22 +78,38 @@ target … : prerequisites …
             rm *.o temp
     ```
     单个`target`可以有多个`rule`，`make`执行时，它们的`prerequisites`将被合并为一个，满足条件即执行所有`recipe`
-* prerequisites：作为目标的依赖目标。（非必须，可以没有依赖文件）
+* prerequisites：作为目标的依赖目标。（非必须，可以没有 依赖文件）
 分为两种依赖目标，由`|`分隔
   * 一般依赖目标,随依赖目标更新执行命令
   * order-only依赖目标，不随依赖目标更新强制执行命令。
   ```
   一般依赖目标 | order-only依赖目标
   ```
-* recipe：执行的动作,可以有多个命令。（注意：需要在每一个动作行上，加上一个tab作为前缀,也可以设置`.RECIPEPREFIX`变量，来改变前缀符）。
-  * 一个变量，定义一个上下文环境
-  * 一个条件表达式，定义一个上下文环境
-  * 以`@`开始的行，在传递给`shell`之前会抛弃掉，用于打印提示。
-  * 执行时，将为每行调用一个新`shell`
-  * `.ONESHELL`用于将所有`target`的所有行，放在一个上下文运行
+* recipe：执行的动作,可以有多个命令。（注意：需要在每一个动作行上，加上一个`tab`作为前缀,也可以设置`.RECIPEPREFIX`变量，来改变前缀符）。
+  * 一个变量，定义一个上下文环境。
+  * 一个条件表达式，定义一个上下文环境。
+  * 以`@`开始的行，在执行时，不打印该行。
+  * 执行时，将为每行调用一个新`shell`。
+  * `.ONESHELL`用于将所有`target`的所有行，放在一个上下文运行。
+  * make使用`SHELL`变量，执行shell。默认为`/bin/sh`。参数变量为`.SHELLFLAGS`。(附：[MS-DOS下SHELL](https://www.gnu.org/software/make/manual/make.html#Choosing-the-Shell))
+  * 使用`MAKE`变量，执行make命令。变量值将被传递到子make的环境变量中。
+  * make不直接解析shell,在简单的转换后，把命令传递给shell执行。
+  * 任何在`recipe`执行过程中，以`tab`开头的行，make将考虑作为`recipe`执行
+  * 使用变量：`$变量名`。(传递到`shell`前被转换，可使用`$$`转义为`$`)
+  * `shell`执行返回非`0`退出，表示异常，将放弃当前`rule`，也可能影响并放弃所有`rule`。
+  * 忽略异常使用`-`开头。`-i`或`--ignore-errors`命令行选项，将忽略所有异常。
 ###执行make
-Makefile中，第一个以非`.`开头的`target`开始（即默认`target`）。如有依赖目标，即检查是否需要生成依赖目标，且当需要生成时，执行依赖目标动作。（即依赖倒推方式执行）。
-makefile有读入和展开两个阶段。读入阶段会替换变量或转义字符,展开阶段会继续替换转义后的变量。
+* Makefile中，第一个以非`.`开头的`target`开始（即默认`target`）。如有依赖目标，即检查是否需要生成依赖目标，且当需要生成时，执行依赖目标动作。（即依赖倒推方式执行）。
+* make命令行选项`-j 并行数`或`-jobs 并行数`开启并行执行(`MS-DOS`中无效)，`.NOTPARALLEL`伪`target`，罗列禁止并行项。
+并行输出，使用`--output-sync`或`-0`选项同步打印。
+  * `none`: 默认，输出产生即打印
+  * `line`:行执行完后，输出打印
+  * `target`:目标执行完后，输出打印(带同步打印选项的默认)
+  * `recurse`:递归调用完成后，输出打印
+* `ctrl-c`中断执行
+并行输入,不允许同时从一个设备输入，如标准输入。
+###函数
+函数调用方式为`$(function arguments)`或`${function arguments}`
 ###gnu程序targets规范
 * `all` 编译程序，应该是默认`target`,不需要重建文档。默认makefile规则中，编译和链接需要带`-g`可调试参数。
 * `install` 编译程序，并拷贝可执行文件，库文件等至安装路径。并且如有验证可用性测试，应该在此执行。
@@ -132,34 +164,6 @@ targets …: target-pattern: prereq-patterns …
 转义字符：`\`
 * 转义注释符`\#`
 * 转义换行符
-
-###Makefile变量
-makefilek可以定义一个名为objects,OBJECTS,objs,OBJS,obj,或OBJ的变量，来记录所有编译对象的列表。
-```
-objects = main.o kbd.o command.o display.o \
-          insert.o search.o files.o utils.o
-
-edit : $(objects)
-        cc -o edit $(objects)
-main.o : main.c defs.h
-        cc -c main.c
-kbd.o : kbd.c defs.h command.h
-        cc -c kbd.c
-command.o : command.c defs.h command.h
-        cc -c command.c
-display.o : display.c defs.h buffer.h
-        cc -c display.c
-insert.o : insert.c defs.h buffer.h
-        cc -c insert.c
-search.o : search.c defs.h buffer.h
-        cc -c search.c
-files.o : files.c defs.h buffer.h command.h
-        cc -c files.c
-utils.o : utils.c defs.h
-        cc -c utils.c
-clean :
-        rm edit $(objects)
-```
 ###Make隐式规则
 不必指明编译的单个C源码文件名。
 ```
