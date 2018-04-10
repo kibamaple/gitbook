@@ -30,17 +30,15 @@ Makefile内容包含显式规则，隐式规则，变量定义，指令和注释
     * 文件名为空，不会包含内容，也不会报异常
     * 会自动忽略行开头多余空格，不能以tab开头
     * 如果想忽略文件不存在或不能重建的异常信息，可以使用`-include`代替`include`
-  * 条件指令`ifeq`，`else`，`endif`。
+  * 条件指令`ifeq`，`else`，`endif`,`ifneq`,`ifdef`,`ifndef`。
   ```
-        libs_for_gcc = -lgnu
-        normal_libs =
-
-        foo: $(objects)
-        ifeq ($(CC),gcc)
-                $(CC) -o foo $(objects) $(libs_for_gcc)
-        else
-                $(CC) -o foo $(objects) $(normal_libs)
-        endi
+      conditional-directive-one
+      text-if-one-is-true
+      else conditional-directive-two
+      text-if-two-is-true
+      else
+      text-if-one-and-two-are-false
+      endif
   ```
   * 定义多行变量(即命令内容变量，可以与eval函数配合使用)
   ```
@@ -108,8 +106,52 @@ target … : prerequisites …
   * `recurse`:递归调用完成后，输出打印
 * `ctrl-c`中断执行
 并行输入,不允许同时从一个设备输入，如标准输入。
+* make执行完成后,与shell一样，会返回退出状态
+  * `0`成功完成编译
+  * `1`有targets未完成
+  * `2`异常
+* [make命令行参数](https://www.gnu.org/software/make/manual/make.html#Options-Summary)
+  * `-k`或`--keep-going`忽略错误，完成makefile编译
 ###函数
 函数调用方式为`$(function arguments)`或`${function arguments}`
+* [文本处理分析函数](https://www.gnu.org/software/make/manual/make.html#Text-Functions)
+* [文件名（目录）函数](https://www.gnu.org/software/make/manual/make.html#File-Name-Functions)
+* 条件函数
+  * `$(if condition,then-part[,else-part])`
+  * `$(or condition1[,condition2[,condition3…]])`
+  * `$(and condition1[,condition2[,condition3…]])`
+* 循环函数`$(foreach var,list,text)`
+  * `var`为函数作用域内有效的局部变量
+* 文件函数`$(file op filename[,text])`
+  * `op`为文件操作，如写入`>`,追加`>>`等
+* 调用函数`$(call variable,param,param,…)`
+  根据变量内容中的表达式，生成新变量值，类似执行变量模板。
+  * `$0`为调用变量名
+  * `$1`~`$n`为参数
+* 值函数`$(value variable)`
+  仅获取变量值，不对变量值进一步展开
+* 内容执行函数`$(eval text)`
+  将text内容作为makefile的一部分执行
+* 变量来源函数`$(origin variable)`
+  * `undefined` 未定义
+  * `default` 默认定义
+  * `environment` 由make提供的环境变量
+  * `environment override` 由make提供的环境变量,并由`-e`覆盖
+  * `file` makefile内定义的变量
+  * `command line` 由命令行定义的变量
+  * `override`在makefile内被覆盖的变量
+  * `automatic` 自动定义变量
+* 变量类型函数`$(flavor variable)`
+  * `undefined`未定义
+  * `recursive` 递归扩展变量
+  * `simple` 简单扩展变量
+* 控制make执行函数
+  * `$(error text…)`抛出异常
+  * `$(warning text…)`抛出警告
+  * `$(info text…)`抛出消息提醒
+* shell调用函数`$(shell ...)`
+* guile扩展函数`$(guile text)`
+  用于在make中执行嵌入的`guile`扩展语言
 ###gnu程序targets规范
 * `all` 编译程序，应该是默认`target`,不需要重建文档。默认makefile规则中，编译和链接需要带`-g`可调试参数。
 * `install` 编译程序，并拷贝可执行文件，库文件等至安装路径。并且如有验证可用性测试，应该在此执行。
