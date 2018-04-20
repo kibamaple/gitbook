@@ -1,9 +1,25 @@
-#MAKE
+# MAKE
 一个程序，往往需要将很多源码文件及各种库，按照特定的顺序编译和链接在一起。gun make程序根据Makefile指定的规则执行指令，根据特定顺序对源码进行编译，测试，安装及清理。
-###使用make文件
+* [使用make文件](#使用make文件)
+* [内容](#内容)
+* [Makefile规则](#Makefile规则)
+* [执行make](#执行make)
+* [函数](#函数)
+* [gnu程序targets规范](#gnu程序targets规范)
+* [通配符](#通配符)
+* [文件查找规则](#文件查找规则)
+* [特殊target](#特殊target)
+* [静态格式匹配规则](#静态格式匹配规则)
+* [gcc依赖生成命令行选项](#gcc依赖生成命令行选项)
+* [读取其他makefile](#读取其他makefile)
+* [转义字符](#转义字符)
+* [Make隐式规则](#Make隐式规则)
+* [Archive](#Archive)
+* [make扩展](#make扩展)
+### 使用make文件
 * 默认情况下，当make查找makefile时，会按照以下顺序尝试以下名称：GNUmakefile，makefile和Makefile。
 * 非标准文件名，可以使用'-f'或'--file'选项指定makefile名称。
-###内容
+### 内容
 Makefile内容包含显式规则，隐式规则，变量定义，指令和注释。
 * `显示规则`描述如何重制一个或多个文件，和调用规则的目标。它罗列出目标所有的依赖条件和执行指令
 * `隐式规则`描述何时以及如何根据其名称重新创建一类文件。
@@ -55,7 +71,7 @@ Makefile内容包含显式规则，隐式规则，变量定义，指令和注释
   * `target`晚于任意`prerequisites`时执行。
   * 无`prerequisites`,任何时候都将执行。
   * 同`target`规则，被视为不同的两个规则，分别执行。
-###Makefile规则
+### Makefile规则
 ```
 target … : prerequisites …
         recipe
@@ -96,7 +112,7 @@ target … : prerequisites …
   * 使用变量：`$变量名`。(传递到`shell`前被转换，可使用`$$`转义为`$`)
   * `shell`执行返回非`0`退出，表示异常，将放弃当前`rule`，也可能影响并放弃所有`rule`。
   * 忽略异常使用`-`开头。`-i`或`--ignore-errors`命令行选项，将忽略所有异常。
-###执行make
+### 执行make
 * Makefile中，第一个以非`.`开头的`target`开始（即默认`target`）。如有依赖目标，即检查是否需要生成依赖目标，且当需要生成时，执行依赖目标动作。（即依赖倒推方式执行）。
 * make命令行选项`-j 并行数`或`-jobs 并行数`开启并行执行(`MS-DOS`中无效)，`.NOTPARALLEL`伪`target`，罗列禁止并行项。
 并行输出，使用`--output-sync`或`-0`选项同步打印。
@@ -110,9 +126,29 @@ target … : prerequisites …
   * `0`成功完成编译
   * `1`有targets未完成
   * `2`异常
-* [make命令行参数](https://www.gnu.org/software/make/manual/make.html#Options-Summary)
+* make命令行参数
+  * `-b` `-m` make的其他版本会忽略
+  * `-B` `--always-make` 无条件执行所有`targets`
+  * `-C dir` `--directory=dir` 改变makefile的读取目录
+  * `d` 打印所有debug信息
+  * `--debug[=options]` 根据选项打印debug信息
+    * `a (all)`
+    * `b (basic)`
+    * `v (verbose)`
+    * `i (implicit)`
+    * `j (jobs)`
+    * `m (makefile)`
+    * `n (none)`
+  * `-e` `--environment-overrides` 设置环境变量,优先于makefile的变量
+  * `--eval=string` 用makefile语法，评估字符串
+  * `-f file` `--file=file` `--makefile=file` 指定makefile名称
+  * `-h` `--help`显示帮助
+  * `-i` `--ignore-errors` 忽略执行中所有异常
+  * `-I dir` `--include-dir=dir` 设置附加makefile包含目录
+  * `-j [jobs]` `--jobs[=jobs]`同时并行执行的任务数
   * `-k`或`--keep-going`忽略错误，完成makefile编译
-###函数
+  * [其他](https://www.gnu.org/software/make/manual/make.html#Options-Summary)
+### 函数
 函数调用方式为`$(function arguments)`或`${function arguments}`
 * [文本处理分析函数](https://www.gnu.org/software/make/manual/make.html#Text-Functions)
 * [文件名（目录）函数](https://www.gnu.org/software/make/manual/make.html#File-Name-Functions)
@@ -152,7 +188,7 @@ target … : prerequisites …
 * shell调用函数`$(shell ...)`
 * guile扩展函数`$(guile text)`
   用于在make中执行嵌入的`guile`扩展语言
-###gnu程序targets规范
+### gnu程序targets规范
 * `all` 编译程序，应该是默认`target`,不需要重建文档。默认makefile规则中，编译和链接需要带`-g`可调试参数。
 * `install` 编译程序，并拷贝可执行文件，库文件等至安装路径。并且如有验证可用性测试，应该在此执行。
 安装`unix man page`之前，应使用`-`忽略异常。
@@ -171,9 +207,9 @@ target … : prerequisites …
 * `dist`创建发布的tar文件
 * `check`程序自行测试，在编译后执行，不需要安装。
 * [其他gnu规范targets](https://www.gnu.org/software/make/manual/make.html#Standard-Targets)
-###通配符
+### 通配符
 与shell一样，如:`*`,`?`,`[...]`
-###文件查找规则
+### 文件查找规则
 根据`target`对其所有`prerequisites`，先检查makefile目录，如果有没找到，则使用`VPATH`变量包含目录列表（冒号分隔）或`vpath`指令指定某类文件的查找目录(`vpath pattern directories`)
 `target`中`recipe`执行目录不受影响，如需取得完整`target`名，可以使用`$@`
 
@@ -185,46 +221,43 @@ target … : prerequisites …
 * `/usr/lib`
 * `prefix/lib`
 `.LIBPATTERNS`变量可以指定链接文件名格式，如默认为：`lib%.so lib%.a`
-###特殊target
+### 特殊target
 * `.PHONY` 虚假目标，不考虑其生成文件，调用即执行的`target`列表
 * [其他特殊target](https://www.gnu.org/software/make/manual/make.html#Special-Targets)
-###静态格式匹配规则
+### 静态格式匹配规则
 ```
 targets …: target-pattern: prereq-patterns …
         recipe
         …
 ```
 从`target`中根据`target-pattern`提取匹配部分，再将该部分按照`prereq-patterns`生成`preerquisites`
-###gcc依赖生成命令行选项
+### gcc依赖生成命令行选项
 * `-E`预处理执行完即停止编译 
 * `-M`预处理将`.c`源码中的`#include`按照make规则输出 
 * `-MM`与`-M`一样，只是不包含标准库
-###读取其他makefile
+### 读取其他makefile
 * MAKE
 * include
-###转义字符
+### 转义字符
 转义字符：`\`
 * 转义注释符`\#`
 * 转义换行符
-###Make隐式规则
-不必指明编译的单个C源码文件名。
+### Make隐式规则
+当依赖没有规则或为规则没有`recipe`时，`make`会根据存在的源文件尝试建立隐式规则。
+* `-r` `--no-builtin-rules` 取消所有预定义的隐式转换规则
+### Archive
 ```
-objects = main.o kbd.o command.o display.o \
-          insert.o search.o files.o utils.o
-
-edit : $(objects)
-        cc -o edit $(objects)
-
-main.o : defs.h
-kbd.o : defs.h command.h
-command.o : defs.h command.h
-display.o : defs.h buffer.h
-insert.o : defs.h buffer.h
-search.o : defs.h buffer.h
-files.o : defs.h buffer.h command.h
-utils.o : defs.h
-
-.PHONY : clean
-clean :
-        rm edit $(objects)
+archive(member member1 ...)
 ```
+以上构造仅适用于`targets`和`prerequisites`
+```
+make "foo.a(bar.o)"
+```
+仅需要`bar.c`源文件，相当于
+```
+cc -c bar.c -o bar.o
+ar r foo.a bar.o
+rm -f bar.o
+```
+### make扩展
+https://www.gnu.org/software/make/manual/make.html#Extending-make

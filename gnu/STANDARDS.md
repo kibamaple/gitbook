@@ -1,17 +1,17 @@
-#GNU编码规范
-###规避法律及相关问题
+# GNU编码规范
+### 规避法律及相关问题
 * 不使用Unix源码及其他专有程序
 * 接受代码贡献前，需要等待GNU确保免责等法律文件生效
 * 在软件包和文档中，不包含任何商标声明
 > 不以“win”作为Microsoft Windows的缩写
-###程序设计
+### 程序设计
 * 不要大量使用模板
 * 提供兼容,且包含'--ansi'，'--posix'或'--compatible'选项以关闭
     > 如果定义了环境变量POSIXLY_CORRECT（即使使用空值定义），许多GNU程序会抑制与POSIX冲突的扩展。如果合适，请让程序识别这个变量。
 * 最好不完全依赖于扩展，提供内嵌方式
 * 构建程序时已知的配置选项，推荐使用if替换条件编译
     > [Standard C and Pre-Standard C](http://www.gnu.org/prep/standards/html_node/Standard-C.html#Standard-C)
-###编写程序行为
+### 编写程序行为
 * GNU工具主要遵循POSIX.2的规范
 * 如有临时文件，需优先检查使用`TMPDIR`环境变量。----[编写健壮的程序](http://www.gnu.org/prep/standards/html_node/Semantics.html#Semantics)
 * 为库选择一个名称前缀，长度超过两个字符。所有外部函数和变量名称都应以此前缀开头。
@@ -54,7 +54,7 @@
 * 在GNU源代码注释，文本文档和其他上下文中，坚持使用一种字符集。首选ASCII字符集。
 * 坚持使用纯ASCII的引号字符,双引号`0x22 (‘"’)`或单引号`0x27 (‘'’)`。
 * `mmap`内存映射文件，需要在使用的特定文件上尝试，不一定成功。
-###文档编写
+### 文档编写
 *  GNU手册在开始时介绍基本主题，并在稍后介绍所有细节。手册应该不仅仅告诉用户每个功能可以做什么，有哪些用法或命令行。还需要说出它最适合的工作，并展示如何将它用于这些工作。解释什么是建议的用法，以及用户应该避免什么样的用法。
 * GNU手册首选文档格式是[Texinfo](http://www.gnu.org/software/texinfo/)格式化语言。例如:[Bison]手册(https://www.gnu.org/software/bison/manual/)
 * 手册文档内容需要独立存在，不应该还需要有其他文本介绍或解释它。
@@ -72,14 +72,28 @@
     * [指示更改部分](https://www.gnu.org/prep/standards/html_node/Indicating-the-Part-Changed.html#Indicating-the-Part-Changed)
 * [Man Page](https://www.gnu.org/prep/standards/html_node/Man-Pages.html#Man-Pages)是次要的，一般使用[help2man](https://www.gnu.org/software/help2man/)将`--help`帮助信息转化为`Man Page`就足够了。
 * [其他手册](https://www.gnu.org/prep/standards/html_node/Reading-other-Manuals.html#Reading-other-Manuals)
-###发布过程
+### 发布过程
 制作一个程序版本，需要能够配置为在各种系统上运行。
 * 需要包含名为`configure`的shell脚本，其参数描述了需要编译的机器和系统，执行后需记录配置选项，以便后面编译。
     * 可以使用[Autoconf](https://www.gnu.org/software/autoconf/autoconf.html)和[Automake](https://www.gnu.org/software/automake/)工具。
+    * 实现的一种方式是，链接生成`config.h`
+    * 实现的另一种方式是，包含`Makefile.in`，生成`Makefile`
+    * 读取的文件，应该被列为`Makefile`的依赖
     * 所有从`configure`脚本输出的文件在开始时都应该有注释，说明它们是使用configure自动生成的。
     * 配置脚本生成一个名为`config.status`的shell脚本，重新生成与上次相同的配置。
     * 支持'--srcdir = dirname'格式的选项来指定找到源的目录。
+    * 应该支持[标准目录变量](https://www.gnu.org/prep/standards/standards.html#Directory-Variables)
+      * `prefix` 安装目录前缀,默认为`/usr/local`
+      * `exec_prefix`默认为` $(prefix)`
+      * ...
     * `configure`未执行配置前，确保程序不能被构建。
+    * 支持参数和`--build=buildtype`选项，指定编译环境`cpu-company-system`
+    * 其他参数或选项支持:
+      * `--enable-feature[=parameter]`支持选择可选功能
+      * `--with-package`指定在哪个包下工作
+      * `variable=value`设置变量
+      * `--host=hosttype`与`buildtype`语法相同，指定运行主机环境
+      * `--target=targettype`与`buildtype`语法相同。指定当前编译出来的程序。执行后，生成另一个程序的运行环境
 * 遵循[Makefile编写约定](https://www.gnu.org/prep/standards/html_node/Makefile-Conventions.html#Makefile-Conventions)
 * 发布包应该包含概述文件`README`,该文件包含以下内容：
     * 包名称
@@ -90,3 +104,4 @@
     * 包含对授权条款文件的参考
 * 发布包通常包含由[Autoconf](https://www.gnu.org/software/autoconf/autoconf.html)，[Automake](https://www.gnu.org/software/automake/)，[Bison](https://www.gnu.org/software/bison/manual/)，[flex](https://www.gnu.org/software/flex/flex.html)，`TeX`和`makeinfo`生成的非源文件,不要轻易引起对其他软件的新依赖。
 * [对非自由软件和文档的参考](https://www.gnu.org/prep/standards/html_node/References.html#References)
+### configure
