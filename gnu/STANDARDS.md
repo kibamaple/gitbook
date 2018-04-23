@@ -104,4 +104,3 @@
     * 包含对授权条款文件的参考
 * 发布包通常包含由[Autoconf](https://www.gnu.org/software/autoconf/autoconf.html)，[Automake](https://www.gnu.org/software/automake/)，[Bison](https://www.gnu.org/software/bison/manual/)，[flex](https://www.gnu.org/software/flex/flex.html)，`TeX`和`makeinfo`生成的非源文件,不要轻易引起对其他软件的新依赖。
 * [对非自由软件和文档的参考](https://www.gnu.org/prep/standards/html_node/References.html#References)
-### configure
