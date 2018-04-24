@@ -50,7 +50,7 @@ Autoconf的首要目的，生产出无痛苦，可移植和可预测的`configur
 * 不带参数运行，将使用`configure.ac`生成`configure`
 * 参数为指定文件，生成内容将输出到标准输出
 * `--debug` `-d` 不删除临时文件
-* `--force` `-f` 更新`configure`
+* `--force` `-f` 强制更新`configure`
 * `--include=dir` `-I dir` 追加的`include`路径
 * `--prepend-include=dir` `-B dir` 预添加的`include`路径
 * `--output=file` `-o file`输出到指定文件
@@ -73,7 +73,26 @@ Autoconf的首要目的，生产出无痛苦，可移植和可预测的`configur
 * `--prepend-include=dir` `-B dir` 预添加的`include`路径
 ### ifnames
 向标准输出预编译指令(`#if, #elif, #ifdef,#ifndef`等)中出现的文件列表
-## autoheader
+### autoreconf
+在适当的时候,在指定目录及子目录下，运行`autoconf`,`autoheader`,`aclocal`,`automake`,`libtoolize`和`autopoint`
+* `--debug` `-d` 不删除临时文件
+* `--force` `-f` 强制更新
+* `--install` `-i` 安装包中缺少的辅助文件
+* `--include=dir` `-I dir` 追加的`include`路径
+* `--prepend-include=dir` `-B dir` 预添加的`include`路径
+* `--no-recursive` 不在子目录重建
+* `--symlink` `-s` 与`--install`一起使用时，将符号链接到辅助文件
+* `--make` `-m` 在目录被配置，更新配置文件。在`./config.status --recheck && ./config.status`后执行`make`
+* `--warnings=category` `-W category` 警告等级
+  * `cross`
+  * `obsolete`
+  * `portability`
+  * `syntax`
+  * `all`
+  * `none`
+  * `error`
+  * `no-category` 
+### autoheader
 用于创建`config.h.in`(含`#define`指令的C头文件模板)
 ### 语法
 * 引用参数，使用`[`和`]`,数字等可简化
@@ -116,6 +135,12 @@ Autoconf的首要目的，生产出无痛苦，可移植和可预测的`configur
      AC_CONFIG_FILES([file...])
      AC_OUTPUT
 ```
+#### `AC_INIT`
+>AC_INIT ([包名], [版本号], [bug报告email地址(可选)], [tar包名], [包主页url])
+
+必须在所有输出宏之前被调用,参数只能使用静态或M4宏.
+* `m4_esyscmd` 计算版本字符串
+* `m4_esyscmd_s`
 # AUTOMAKE
 [Automake](https://www.gnu.org/software/automake/)从`Makefile.am`自动生成供Autoconf使用的`Makefile.in`文件。`Makefile.am`基本上都是`make`的变量定义。需要使用`perl`来生成`Makefile.in`。
 ### 标准目录标量
@@ -135,3 +160,5 @@ docdir	${datarootdir}/doc/${PACKAGE}
 [Gnulib](https://www.gnu.org/software/gnulib/)常用GNU代码。打算在免费软件中共享。
 # Libtool
 [Libtool](https://www.gnu.org/software/libtool/)是一个通用库支持脚本。提供构建共享库的所有需求。
+# GNU M4
+是unix宏处理器的一个实现,除了宏扩展以外,还包含加载命名文件，执行shell命令,执行整数运算,文本处理,递归执行等内置函数.
