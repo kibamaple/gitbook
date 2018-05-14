@@ -26,7 +26,6 @@ facebook出品的测试工具。集断言，mock,spy和coverage等一体。方�
 > expect.stringContaining(string)
 > expect.stringMatching(regexp)
 > expect.addSnapshotSerializer(serializer)
-> expect.addSnapshotSerializer(serializer)
 > .not
 > .resolves
 > .rejects
@@ -192,3 +191,4 @@ facebook出品的测试工具。集断言，mock,spy和coverage等一体。方�
 > --watch
 > --watchAll
 > --watchman
+### 备注
